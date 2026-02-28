@@ -20,7 +20,7 @@ const envConfig = () => ({
   CLOUDINARY_API_KEY: getEnv("CLOUDINARY_API_KEY"),
   CLOUDINARY_API_SECRET: getEnv("CLOUDINARY_API_SECRET"),
 
-  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN"),
+  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "https://finora-rosy.vercel.app"),
 
   MAIL_HOST: getEnv("MAIL_HOST", "smtp.gmail.com"),
   MAIL_PORT: getEnv("MAIL_PORT", "587"),
