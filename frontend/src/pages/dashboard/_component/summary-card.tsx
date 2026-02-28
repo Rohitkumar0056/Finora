@@ -238,12 +238,12 @@ const getCardStatus = (
   };
 };
 
-const getTrendDirection = (value: number, cardType: CardType) => {
-  if (cardType === "expenses") {
-    return value <= 0 ? "positive" : "negative";
-  }
-  return value >= 0 ? "positive" : "negative";
-};
+// const getTrendDirection = (value: number, cardType: CardType) => {
+//   if (cardType === "expenses") {
+//     return value <= 0 ? "positive" : "negative";
+//   }
+//   return value >= 0 ? "positive" : "negative";
+// };
 
 const SummaryCard: FC<SummaryCardProps> = ({
   title,
@@ -256,15 +256,15 @@ const SummaryCard: FC<SummaryCardProps> = ({
   cardType = "balance",
 }) => {
   const status = getCardStatus(value, cardType, expenseRatio, percentageChange);
-  const showTrend =
-    percentageChange !== undefined &&
-    percentageChange !== null &&
-    cardType !== "savings";
+  // const showTrend =
+  //   percentageChange !== undefined &&
+  //   percentageChange !== null &&
+  //   cardType !== "savings";
 
-  const trendDirection =
-    showTrend && percentageChange !== 0
-      ? getTrendDirection(percentageChange, cardType)
-      : null;
+  // const trendDirection =
+  //   showTrend && percentageChange !== 0
+  //     ? getTrendDirection(percentageChange, cardType)
+  //     : null;
 
   if (isLoading) {
     return (

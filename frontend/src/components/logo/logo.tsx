@@ -1,5 +1,5 @@
 import { PROTECTED_ROUTES } from "@/routes/common/routePath"
-import { GalleryVerticalEnd, Landmark } from "lucide-react"
+import { Landmark } from "lucide-react"
 import { Link } from "react-router-dom"
 
 const Logo = (props: { url?: string }) => {

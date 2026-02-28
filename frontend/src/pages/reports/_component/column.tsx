@@ -1,6 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Clock, RefreshCw } from "lucide-react";
+import { Clock } from "lucide-react";
 import { _REPORT_STATUS, ReportStatusType } from "@/constant";
 import { ReportType } from "@/features/report/reportType";
 
