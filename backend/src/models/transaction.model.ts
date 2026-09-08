@@ -119,6 +119,14 @@ const transactionSchema = new Schema<TransactionDocument>(
   }
 );
 
+transactionSchema.index({ userId: 1, date: -1 });
+// Compound index for filtering by user and type (income/expense filtering)
+transactionSchema.index({ userId: 1, type: 1 });
+// Index for recurring transaction queries
+transactionSchema.index({ isRecurring: 1, nextRecurringDate: 1 });
+// Text index for search functionality
+transactionSchema.index({ title: "text", description: "text" });
+
 const TransactionModel = mongoose.model<TransactionDocument>(
   "Transaction",
   transactionSchema

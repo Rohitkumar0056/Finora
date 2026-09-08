@@ -42,12 +42,31 @@ const SignInForm = ({
   const onSubmit = (values: FormValues) => {
     login(values)
       .unwrap()
-      .then((data) => {
+      .then(async (data) => {
         dispatch(setCredentials(data));
         toast.success("Login successful");
-        setTimeout(() => {
-          navigate(PROTECTED_ROUTES.OVERVIEW);
-        }, 1000);
+
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/billing/subscription/status`, {
+            headers: {
+              Authorization: `Bearer ${data.accessToken}`,
+            },
+          });
+
+          const subscriptionData = await response.json();
+          const status = subscriptionData?.data?.status;
+          const isTrialActive = subscriptionData?.data?.isTrialActive;
+          const isPro = subscriptionData?.data?.currentPlan && status === "active";
+
+          if (!isPro && !isTrialActive) {
+            navigate(PROTECTED_ROUTES.SETTINGS_BILLING, { replace: true });
+            return;
+          }
+
+          navigate(PROTECTED_ROUTES.OVERVIEW, { replace: true });
+        } catch {
+          navigate(PROTECTED_ROUTES.SETTINGS_BILLING, { replace: true });
+        }
       })
       .catch((error) => {
         console.log(error);

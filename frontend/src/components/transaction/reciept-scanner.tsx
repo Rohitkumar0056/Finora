@@ -3,10 +3,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ScanText } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+
 import { AIScanReceiptData } from "@/features/transaction/transationType";
 import { toast } from "sonner";
 import { useProgressLoader } from "@/hooks/use-progress-loader";
 import { useAiScanReceiptMutation } from "@/features/transaction/transactionAPI";
+import { MAX_FILE_SIZE } from "@/constant";
 
 interface ReceiptScannerProps {
   loadingChange: boolean;
@@ -43,6 +45,12 @@ const ReceiptScanner = ({
       toast.error("Please upload an image file");
       return;
     }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File size exceeds the limit");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("receipt", file);
 
@@ -90,9 +98,8 @@ const ReceiptScanner = ({
       <div className="flex items-start gap-3 border-b pb-4">
         {/* Receipt Preview */}
         <div
-          className={`h-12 w-12 rounded-md border bg-cover bg-center ${
-            !receipt ? "bg-muted" : ""
-          }`}
+          className={`h-12 w-12 rounded-md border bg-cover bg-center ${!receipt ? "bg-muted" : ""
+            }`}
           style={receipt ? { backgroundImage: `url(${receipt})` } : {}}
         >
           {!receipt && (
@@ -117,7 +124,7 @@ const ReceiptScanner = ({
                 disabled={loadingChange}
               />
               <p className="mt-2 text-[11px] px-2 text-muted-foreground">
-                JPG, PNG up to 5MB
+                JPG, PNG up to 10MB
               </p>
             </>
           ) : (

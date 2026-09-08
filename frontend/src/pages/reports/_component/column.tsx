@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, RefreshCw } from "lucide-react";
 import { _REPORT_STATUS, ReportStatusType } from "@/constant";
 import { ReportType } from "@/features/report/reportType";
 
@@ -55,13 +56,27 @@ export const reportColumns: ColumnDef<ReportType>[] = [
     },
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
+  {
+    id: "actions",
+    header: "Actions",
+    size: 100,
+    cell: () => (
+      <div className="flex gap-1">
+        <Button size="sm" variant="outline" className="font-normal">
+          <RefreshCw className="h-4 w-4" />
+          Resend
+        </Button>
+        <div></div>
+      </div>
+    ),
+  },
 
   {
-    id: "-",
+    id: "spacer-1",
     header: "",
   },
   {
-    id: "-",
+    id: "spacer-2",
     header: "",
   },
 ];

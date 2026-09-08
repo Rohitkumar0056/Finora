@@ -11,7 +11,7 @@ import {
   VisibilityState,
   ColumnFiltersState,
 } from "@tanstack/react-table";
-import { Loader, PlusCircleIcon, Trash, X } from "lucide-react";
+import { Loader, PlusCircleIcon, Trash, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -62,6 +62,8 @@ interface DataTableProps<TData> {
   };
   onPageChange?: (pageNumber: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  emptyMessage?: string;
+  onExport?: () => void;
 }
 
 export function DataTable<TData>({
@@ -81,6 +83,8 @@ export function DataTable<TData>({
   pagination,
   onPageChange,
   onPageSizeChange,
+  emptyMessage,
+  onExport,
 }: DataTableProps<TData>) {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [filterValues, setFilterValues] = React.useState<
@@ -135,8 +139,7 @@ export function DataTable<TData>({
   };
 
   const handleDelete = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const selectedIds = selectedRows.map((row) => (row.original as any).id);
+    const selectedIds = selectedRows.map((row) => (row.original as any)._id);
     onBulkDelete?.(selectedIds);
     setRowSelection({});
   };
@@ -181,30 +184,45 @@ export function DataTable<TData>({
           {(searchTerm ||
             Object.keys(rowSelection).length > 0 ||
             Object.keys(filterValues).length > 0) && (
+              <Button
+                variant="ghost"
+                disabled={isLoading || isBulkDeleting}
+                onClick={handleClear}
+                className="h-8 px-2"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Reset
+              </Button>
+            )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {onExport && (
             <Button
-              variant="ghost"
-              disabled={isLoading || isBulkDeleting}
-              onClick={handleClear}
-              className="h-8 px-2"
+              variant="outline"
+              size="sm"
+              onClick={onExport}
+              disabled={isLoading || data.length === 0}
+              className="h-8"
             >
-              <X className="h-4 w-4 mr-1" />
-              Reset
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
+          )}
+
+          {(selection && hasSelections) && (
+            <Button
+              disabled={isLoading || isBulkDeleting}
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+            >
+              <Trash className="h-4 w-4 mr-1" />
+              Delete ({selectedRows.length})
+              {isBulkDeleting && <Loader className="ml-1 h-4 w-4 animate-spin" />}
             </Button>
           )}
         </div>
-
-        {(selection && hasSelections) || isBulkDeleting ? (
-          <Button
-            disabled={isLoading || isBulkDeleting}
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-          >
-            <Trash className="h-4 w-4 mr-1" />
-            Delete ({selectedRows.length})
-            {isBulkDeleting && <Loader className="ml-1 h-4 w-4 animate-spin" />}
-          </Button>
-        ) : null}
       </div>
 
       {/* Table */}
@@ -214,6 +232,7 @@ export function DataTable<TData>({
         ) : (
           <Table
             className={cn(
+              "min-w-[800px]",
               table.getRowModel().rows.length === 0 ? "h-[200px]" : ""
             )}
           >
@@ -257,7 +276,10 @@ export function DataTable<TData>({
                     colSpan={columns.length}
                     className="text-center h-24"
                   >
-                    <EmptyState title="No records found" description="" />
+                    <EmptyState
+                      title={emptyMessage || "No records found"}
+                      description=""
+                    />
                   </TableCell>
                 </TableRow>
               )}

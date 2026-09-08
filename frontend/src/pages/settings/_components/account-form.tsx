@@ -110,12 +110,40 @@ export function AccountForm() {
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-2">
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="max-w-[250px]"
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  id="profile-picture-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() =>
+                    document.getElementById("profile-picture-upload")?.click()
+                  }
+                >
+                  Upload Image
+                </Button>
+                {avatarUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => {
+                      setFile(null);
+                      setAvatarUrl(null);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
                 Recommended: Square JPG, PNG, at least 300x300px.
               </p>

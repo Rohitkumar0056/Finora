@@ -75,6 +75,27 @@ const transactionSchema = z.object({
     .optional(),
 });
 
+const normalizePaymentMethod = (value: string): string => {
+  const normalized = value.toUpperCase().replace(/\s+/g, "_");
+  if (Object.values(PAYMENT_METHODS_ENUM).includes(normalized as any)) {
+    return normalized;
+  }
+  // Try to map common variations
+  const map: Record<string, string> = {
+    "CARD": PAYMENT_METHODS_ENUM.CARD,
+    "CREDIT_CARD": PAYMENT_METHODS_ENUM.CARD,
+    "DEBIT_CARD": PAYMENT_METHODS_ENUM.CARD,
+    "BANK": PAYMENT_METHODS_ENUM.BANK_TRANSFER,
+    "WIRE": PAYMENT_METHODS_ENUM.BANK_TRANSFER,
+    "TRANSFER": PAYMENT_METHODS_ENUM.BANK_TRANSFER,
+    "PAYPAL": PAYMENT_METHODS_ENUM.MOBILE_PAYMENT,
+    "MOBILE": PAYMENT_METHODS_ENUM.MOBILE_PAYMENT,
+    "UPI": PAYMENT_METHODS_ENUM.MOBILE_PAYMENT,
+    "CASH": PAYMENT_METHODS_ENUM.CASH,
+  };
+  return map[normalized] || "OTHER";
+};
+
 const ConfirmationStep = ({
   file,
   mappings,
@@ -155,7 +176,9 @@ const ConfirmationStep = ({
             ? Number(row[csvColumn])
             : transactionField === "date"
               ? new Date(row[csvColumn])
-              : row[csvColumn];
+              : transactionField === "paymentMethod"
+                ? normalizePaymentMethod(String(row[csvColumn]))
+                : row[csvColumn];
       });
       try {
         const validated = transactionSchema.parse(transaction);
@@ -165,17 +188,17 @@ const ConfirmationStep = ({
         const message =
           error instanceof z.ZodError
             ? error.errors
-                .map((e) => {
-                  if (e.path[0] === "type")
-                    return "Transaction type:- must be INCOME or EXPENSE";
-                  if (e.path[0] === "paymentMethod")
-                    return (
-                      "Payment method:- must be one of: " +
-                      Object.values(PAYMENT_METHODS_ENUM).join(", ")
-                    );
-                  return `${e.path[0]}: ${e.message}`;
-                })
-                .join("\n")
+              .map((e) => {
+                if (e.path[0] === "type")
+                  return "Transaction type:- must be INCOME or EXPENSE";
+                if (e.path[0] === "paymentMethod")
+                  return (
+                    "Payment method:- must be one of: " +
+                    Object.values(PAYMENT_METHODS_ENUM).join(", ")
+                  );
+                return `${e.path[0]}: ${e.message}`;
+              })
+              .join("\n")
             : "Invalid data";
         setErrors((prev) => ({
           ...prev,

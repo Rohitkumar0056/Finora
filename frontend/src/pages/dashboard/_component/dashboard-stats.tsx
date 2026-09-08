@@ -10,7 +10,7 @@ const DashboardStats = ({ dateRange }: { dateRange?: DateRangeType }) => {
   const summaryData = data?.data;
 
   return (
-    <div className="flex flex-row items-center">
+    <div className="flex flex-col gap-4">
       <div className="flex-1 lg:flex-[1] grid grid-cols-1 lg:grid-cols-4 gap-4">
         <SummaryCard
           title="Available Balance"
@@ -46,6 +46,19 @@ const DashboardStats = ({ dateRange }: { dateRange?: DateRangeType }) => {
           cardType="savings"
         />
       </div>
+      {!isFetching &&
+        summaryData?.totalIncome === 0 &&
+        summaryData?.totalExpenses === 0 && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-900/20">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-blue-800 dark:text-blue-300">
+                💡 <strong>No data visible?</strong> You might have data outside
+                the selected range. Try switching to <strong>"All Time"</strong>{" "}
+                using the date filter above.
+              </span>
+            </div>
+          </div>
+        )}
     </div>
   );
 };

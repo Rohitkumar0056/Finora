@@ -39,7 +39,6 @@ export const getAllTransactionController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user?._id;
 
-    // Extract filters from query params
     const filters = {
       keyword: req.query.keyword as string | undefined,
       type: req.query.type as keyof typeof TransactionTypeEnum | undefined,
@@ -49,7 +48,6 @@ export const getAllTransactionController = asyncHandler(
         | undefined,
     };
 
-    // Extract pagination params
     const pagination = {
       pageSize: parseInt(req.query.pageSize as string) || 20,
       pageNumber: parseInt(req.query.pageNumber as string) || 1,
@@ -57,9 +55,21 @@ export const getAllTransactionController = asyncHandler(
 
     const result = await getAllTransactionService(userId, filters, pagination);
 
+    // DEBUG: Log what's being returned
+    // console.log('[getAllTransactionController] Response:', {
+    //   hasTransactions: !!result.transactions,
+    //   transactionsType: typeof result.transactions,
+    //   transactionsIsArray: Array.isArray(result.transactions),
+    //   transactionsLength: result.transactions?.length,
+    //   paginationTotalCount: result.pagination?.totalCount,
+    //   resultKeys: Object.keys(result),
+    // });
+
+    // Explicitly structure the response to avoid any spread operator issues
     return res.status(HTTPSTATUS.OK).json({
       message: "Transaction fetched successfully",
-      ...result,
+      transactions: result.transactions,
+      pagination: result.pagination,
     });
   }
 );
@@ -99,8 +109,6 @@ export const updateTransactionController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const transactionId = transactionIdSchema.parse(req.params.id);
-
-    // Validate incoming update fields
     const body = updateTransactionSchema.parse(req.body);
 
     await updateTransactionService(userId, transactionId, body);
@@ -127,8 +135,6 @@ export const deleteTransactionController = asyncHandler(
 export const bulkDeleteTransactionController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user?._id;
-
-    // Validate array of transaction IDs
     const { transactionIds } = bulkDeleteTransactionSchema.parse(req.body);
 
     const result = await bulkDeleteTransactionService(userId, transactionIds);
@@ -157,7 +163,7 @@ export const bulkTransactionController = asyncHandler(
 export const scanReceiptController = asyncHandler(
   async (req: Request, res: Response) => {
     const file = req?.file;
-
+    console.log("DEBUG: scanReceiptController called. File detected:", !!file);
     const result = await scanReceiptService(file);
 
     return res.status(HTTPSTATUS.OK).json({

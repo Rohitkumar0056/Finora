@@ -11,6 +11,7 @@ import {
 import { genAI, genAIModel } from "../config/google-ai.config";
 import { createPartFromBase64, createUserContent } from "@google/genai";
 import { receiptPrompt } from "../utils/prompt";
+import { convertToDollarUnit } from "../utils/format-currency";
 
 export const createTransactionService = async (
   body: CreateTransactionType,
@@ -86,18 +87,25 @@ export const getAllTransactionService = async (
   const { pageSize, pageNumber } = pagination;
   const skip = (pageNumber - 1) * pageSize;
 
-  const [transations, totalCount] = await Promise.all([
+  const [rawTransactions, totalCount] = await Promise.all([
     TransactionModel.find(filterConditions)
       .skip(skip)
       .limit(pageSize)
-      .sort({ createdAt: -1 }),
+      .sort({ createdAt: -1 })
+      .lean(),
     TransactionModel.countDocuments(filterConditions),
   ]);
+
+  // Convert amount from cents to dollars since .lean() bypasses Mongoose getters
+  const transactions = rawTransactions.map(transaction => ({
+    ...transaction,
+    amount: convertToDollarUnit(transaction.amount),
+  }));
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return {
-    transations,
+    transactions,
     pagination: {
       pageSize,
       pageNumber,
@@ -294,24 +302,43 @@ export const scanReceiptService = async (
       throw new BadRequestException("Could not process file");
     }
 
-    // Send to Gemini AI API with custom prompt
-    const result = await genAI.models.generateContent({
-      model: genAIModel,
-      contents: [
-        createUserContent([
-          receiptPrompt,
-          createPartFromBase64(base64String, file.mimetype),
-        ]),
-      ],
-      config: {
-        temperature: 0,
-        topP: 1,
-        responseMimeType: "application/json",
-      },
-    });
+    let result;
+    const maxRetries = 3;
+    const retryDelay = 20000; // 20 seconds
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        result = await genAI.models.generateContent({
+          model: genAIModel,
+          contents: [
+            createUserContent([
+              receiptPrompt,
+              createPartFromBase64(base64String, file.mimetype),
+            ]),
+          ],
+          config: {
+            temperature: 0,
+            topP: 1,
+            responseMimeType: "application/json",
+          },
+        });
+        break; // Success, exit loop
+      } catch (error: any) {
+        console.error(`DEBUG: Attempt ${attempt} failed:`, error.message);
+        if (
+          attempt < maxRetries &&
+          (error?.status === 429 || error?.response?.status === 429 || error?.message?.includes("429"))
+        ) {
+          console.log(`DEBUG: Rate limit hit. Retrying in ${retryDelay / 1000}s...`);
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        } else {
+          throw error; // Rethrow if it's not a rate limit or last attempt
+        }
+      }
+    }
 
     // Clean response text from model
-    const response = result.text;
+    const response = result?.text;
     const cleanedText = response?.replace(/```(?:json)?\n?/g, "").trim();
 
     if (!cleanedText) {

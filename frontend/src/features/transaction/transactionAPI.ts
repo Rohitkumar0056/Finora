@@ -41,6 +41,11 @@ export const transactionApi = apiClient.injectEndpoints({
           pageSize = 10,
         } = params;
 
+        // DEBUG: Log when request is being made
+        console.log('[RTK Query] Making getAllTransactions request with params:', {
+          keyword, type, recurringStatus, pageNumber, pageSize
+        });
+
         return {
           url: "/transaction/all",
           method: "GET",
@@ -52,6 +57,20 @@ export const transactionApi = apiClient.injectEndpoints({
             pageSize,
           },
         };
+      },
+      transformResponse: (response: GetAllTransactionResponse) => {
+        // DEBUG: Log the actual API response
+        console.log('[RTK Query] getAllTransactions raw response:', response);
+        console.log('[RTK Query] getAllTransactions response details:', {
+          message: response.message,
+          hasTransactions: !!response.transactions,
+          transactionsType: typeof response.transactions,
+          transactionsIsArray: Array.isArray(response.transactions),
+          transactionsLength: response.transactions?.length,
+          paginationTotalCount: response.pagination?.totalCount,
+          responseKeys: Object.keys(response),
+        });
+        return response;
       },
       providesTags: ["transactions"],
     }),
@@ -68,7 +87,7 @@ export const transactionApi = apiClient.injectEndpoints({
         url: `/transaction/duplicate/${id}`,
         method: "PUT",
       }),
-      invalidatesTags: ["transactions"],
+  invalidatesTags: ["transactions", "analytics"],
     }),
 
     updateTransaction: builder.mutation<void, UpdateTransactionPayload>({
@@ -77,7 +96,7 @@ export const transactionApi = apiClient.injectEndpoints({
         method: "PUT",
         body: transaction,
       }),
-      invalidatesTags: ["transactions"],
+  invalidatesTags: ["transactions", "analytics"],
     }),
 
     bulkImportTransaction: builder.mutation<void, BulkImportTransactionPayload>(
@@ -87,7 +106,7 @@ export const transactionApi = apiClient.injectEndpoints({
           method: "POST",
           body,
         }),
-        invalidatesTags: ["transactions"],
+  invalidatesTags: ["transactions", "analytics"],
       }
     ),
 

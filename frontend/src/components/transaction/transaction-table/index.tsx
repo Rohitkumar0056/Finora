@@ -8,6 +8,7 @@ import {
   useGetAllTransactionsQuery,
 } from "@/features/transaction/transactionAPI";
 import { toast } from "sonner";
+import { exportToCSV } from "@/lib/export-csv";
 
 type FilterType = {
   type?: _TransactionType | undefined;
@@ -42,16 +43,20 @@ const TransactionTable = (props: {
     pageSize: filter.pageSize,
   });
 
-  const transactions = data?.transations || [];
+  // Ensure transactions is always a valid array
+  const transactions = Array.isArray(data?.transactions) ? data.transactions : [];
+
+  // Only show pagination values when we have valid transaction data
+  // This prevents the mismatch where pagination shows "1-20 of 56" but table shows "No records"
+  const hasValidData = Array.isArray(data?.transactions);
   const pagination = {
-    totalItems: data?.pagination?.totalCount || 0,
-    totalPages: data?.pagination?.totalPages || 0,
+    totalItems: hasValidData ? (data?.pagination?.totalCount || 0) : 0,
+    totalPages: hasValidData ? (data?.pagination?.totalPages || 0) : 0,
     pageNumber: filter.pageNumber,
     pageSize: filter.pageSize,
   };
 
   const handleSearch = (value: string) => {
-    console.log(debouncedTerm);
     setSearchTerm(value);
   };
 
@@ -83,9 +88,25 @@ const TransactionTable = (props: {
       });
   };
 
+  const handleExport = () => {
+    // Only select relevant fields for export
+    const exportData = transactions.map((t) => ({
+      Date: new Date(t.date).toLocaleDateString(),
+      Title: t.title,
+      Amount: t.amount,
+      Type: t.type,
+      Category: t.category,
+      "Payment Method": t.paymentMethod,
+      Status: t.status,
+    }));
+
+    exportToCSV(exportData, "transactions");
+    toast.success("Export started");
+  };
+
   return (
     <DataTable
-      data={transactions} //transactions
+      data={transactions}
       columns={transactionColumns}
       searchPlaceholder="Search transactions..."
       isLoading={isFetching}
@@ -115,6 +136,8 @@ const TransactionTable = (props: {
       onPageSizeChange={(pageSize) => handlePageSizeChange(pageSize)}
       onFilterChange={(filters) => handleFilterChange(filters)}
       onBulkDelete={handleBulkDelete}
+      emptyMessage="No transactions found. Try adjusting the date filter or search terms."
+      onExport={handleExport}
     />
   );
 };

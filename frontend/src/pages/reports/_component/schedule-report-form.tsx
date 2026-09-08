@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Clock, Loader, Mail } from "lucide-react";
+import { Loader, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,7 +12,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAppDispatch, useTypedSelector } from "@/app/hook";
 import { useUpdateReportSettingMutation } from "@/features/report/reportAPI";
@@ -149,17 +155,14 @@ const ScheduleReportForm = ({
                       defaultValue={field.value}
                       disabled={true}
                     >
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Input
-                            placeholder="Enter email address"
-                            disabled={true}
-                            {...field}
-                            className="flex-1"
-                          />
-                        </FormControl>
-                      </div>
+                      <FormControl className="w-full">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select frequency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
+                      </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>

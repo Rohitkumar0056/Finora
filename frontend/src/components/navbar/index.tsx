@@ -9,10 +9,13 @@ import { Sheet, SheetContent } from "../ui/sheet";
 import { UserNav } from "./user-nav";
 import LogoutDialog from "./logout-dialog";
 import { useTypedSelector } from "@/app/hook";
+import useBillingSubscription from "@/hooks/use-billing-subscription";
 
 const Navbar = () => {
   const { pathname } = useLocation();
-  const { user } = useTypedSelector((state) => state.auth);
+  const { accessToken, user } = useTypedSelector((state) => state.auth);
+  const { isPro, isTrialActive } = useBillingSubscription(accessToken);
+  const shouldKeepOnBilling = !isPro && !isTrialActive;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
@@ -63,49 +66,75 @@ const Navbar = () => {
 
             {/* Navigation*/}
             <nav className="hidden md:flex items-center gap-x-2 overflow-x-auto">
-              {routes?.map((route) => (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={cn(
-                    `w-full lg:w-auto font-normal py-4.5
-                     hover:text-white border-none
-                     text-white/60 focus:bg-white/30
-                     transtion !bg-transparent !text-[14.5px]
-                     `,
-                    pathname === route.href && "text-white"
-                  )}
-                  asChild
-                >
-                  <NavLink key={route.href} to={route.href}>
-                    {route.label}
-                  </NavLink>
-                </Button>
-              ))}
+              {routes?.map((route) => {
+                const isBlocked = shouldKeepOnBilling && route.href !== PROTECTED_ROUTES.SETTINGS_BILLING;
+
+                return (
+                  <Button
+                    key={`desktop-nav-${route.href}`}
+                    size="sm"
+                    variant="ghost"
+                    className={cn(
+                      `w-full lg:w-auto font-normal py-4.5
+                       hover:text-white border-none
+                       text-white/60 focus:bg-white/30
+                       transtion !bg-transparent !text-[14.5px]
+                       `,
+                      pathname === route.href && "text-white",
+                      isBlocked && "pointer-events-none opacity-50"
+                    )}
+                    asChild
+                  >
+                    <NavLink
+                      to={isBlocked ? PROTECTED_ROUTES.SETTINGS_BILLING : route.href}
+                      onClick={(event) => {
+                        if (isBlocked) {
+                          event.preventDefault();
+                        }
+                      }}
+                    >
+                      {route.label}
+                    </NavLink>
+                  </Button>
+                );
+              })}
             </nav>
 
             {/* Mobile Navigation */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetContent side="left" className="bg-white">
                 <nav className="flex flex-col gap-y-2 pt-9">
-                  {routes?.map((route) => (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className={cn(
-                        `w-full font-normal py-4.5
-                       hover:bg-white/10 hover:text-black border-none
-                       text-black/70 focus:bg-white/30
-                       transtion !bg-transparent justify-start`,
-                        pathname === route.href && "!bg-black/10 text-black"
-                      )}
-                      asChild
-                    >
-                      <NavLink key={route.href} to={route.href}>
-                        {route.label}
-                      </NavLink>
-                    </Button>
-                  ))}
+                  {routes?.map((route) => {
+                    const isBlocked = shouldKeepOnBilling && route.href !== PROTECTED_ROUTES.SETTINGS_BILLING;
+
+                    return (
+                      <Button
+                        key={`mobile-nav-${route.href}`}
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          `w-full font-normal py-4.5
+                         hover:bg-white/10 hover:text-black border-none
+                         text-black/70 focus:bg-white/30
+                         transtion !bg-transparent justify-start`,
+                          pathname === route.href && "!bg-black/10 text-black",
+                          isBlocked && "pointer-events-none opacity-50"
+                        )}
+                        asChild
+                      >
+                        <NavLink
+                          to={isBlocked ? PROTECTED_ROUTES.SETTINGS_BILLING : route.href}
+                          onClick={(event) => {
+                            if (isBlocked) {
+                              event.preventDefault();
+                            }
+                          }}
+                        >
+                          {route.label}
+                        </NavLink>
+                      </Button>
+                    );
+                  })}
                 </nav>
               </SheetContent>
             </Sheet>
@@ -132,3 +161,5 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+

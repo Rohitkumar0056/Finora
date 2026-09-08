@@ -63,6 +63,44 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
     enableSorting: false,
     enableHiding: false,
   },
+  // Title and Amount first for mobile visibility
+  {
+    accessorKey: "title",
+    header: "Title",
+  },
+  {
+    accessorKey: "amount",
+    header: () => <div className="text-right">Amount</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("amount"));
+      const type = row.getValue("type");
+
+      return (
+        <div
+          className={`text-right font-medium ${type === _TRANSACTION_TYPE.INCOME
+            ? "text-green-600"
+            : "text-destructive"
+            }`}
+        >
+          {type === _TRANSACTION_TYPE.EXPENSE ? "-" : "+"}
+          {formatCurrency(amount)}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "date",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Transaction Date
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => format(row.original.date, "MMM dd, yyyy"),
+  },
   {
     accessorKey: "createdAt",
     header: ({ column }) => (
@@ -70,16 +108,13 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Date Created
+        Added On
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => format(row.getValue("createdAt"), "MMM dd, yyyy"),
   },
-  {
-    accessorKey: "title",
-    header: "Title",
-  },
+  // Title already moved up for mobile visibility
   {
     accessorKey: "category",
     header: ({ column }) => (
@@ -111,11 +146,10 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
     cell: ({ row }) => (
       <div className="capitalize">
         <span
-          className={`px-2 py-1 rounded-full text-xs ${
-            row.getValue("type") === _TRANSACTION_TYPE.INCOME
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
+          className={`px-2 py-1 rounded-full text-xs ${row.getValue("type") === _TRANSACTION_TYPE.INCOME
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800"
+            }`}
         >
           {row.getValue("type")}
         </span>
@@ -125,40 +159,7 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
       return value.includes(row.getValue(id));
     },
   },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"));
-      const type = row.getValue("type");
-
-      return (
-        <div
-          className={`text-right font-medium ${
-            type === _TRANSACTION_TYPE.INCOME
-              ? "text-green-600"
-              : "text-destructive"
-          }`}
-        >
-          {type === _TRANSACTION_TYPE.EXPENSE ? "-" : "+"}
-          {formatCurrency(amount)}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "date",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Transaction Date
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => format(row.original.date, "MMM dd, yyyy"),
-  },
+  // Amount already moved up for mobile visibility
   {
     accessorKey: "paymentMethod",
     header: "Payment Method",
@@ -190,21 +191,21 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
 
       const frequencyMap: FrequencyMapType = isRecurring
         ? {
-            [_TRANSACTION_FREQUENCY.DAILY]: { label: "Daily", icon: RefreshCw },
-            [_TRANSACTION_FREQUENCY.WEEKLY]: {
-              label: "Weekly",
-              icon: RefreshCw,
-            },
-            [_TRANSACTION_FREQUENCY.MONTHLY]: {
-              label: "Monthly",
-              icon: RefreshCw,
-            },
-            [_TRANSACTION_FREQUENCY.YEARLY]: {
-              label: "Yearly",
-              icon: RefreshCw,
-            },
-            DEFAULT: { label: "One-time", icon: CircleDot }, // Fallback
-          }
+          [_TRANSACTION_FREQUENCY.DAILY]: { label: "Daily", icon: RefreshCw },
+          [_TRANSACTION_FREQUENCY.WEEKLY]: {
+            label: "Weekly",
+            icon: RefreshCw,
+          },
+          [_TRANSACTION_FREQUENCY.MONTHLY]: {
+            label: "Monthly",
+            icon: RefreshCw,
+          },
+          [_TRANSACTION_FREQUENCY.YEARLY]: {
+            label: "Yearly",
+            icon: RefreshCw,
+          },
+          DEFAULT: { label: "One-time", icon: CircleDot }, // Fallback
+        }
         : { DEFAULT: { label: "One-time", icon: CircleDot } };
 
       const frequencyKey = isRecurring ? (frequency as string) : "DEFAULT";
@@ -238,7 +239,7 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
 // eslint-disable-next-line react-refresh/only-export-components
 const ActionsCell = ({ row }: { row: any }) => {
   //const isRecurring = row.original.isRecurring;
-  const transactionId = row.original.id;
+  const transactionId = row.original._id;
   const { onOpenDrawer } = useEditTransactionDrawer();
 
   const [duplicateTransaction, { isLoading: isDuplicating }] =
